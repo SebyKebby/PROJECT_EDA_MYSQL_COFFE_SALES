@@ -130,3 +130,120 @@ FROM coffee_sales_staging2
 
 -- 2. EDA
 
+-- What is the most popular coffee
+SELECT 
+    coffee_name,
+    COUNT(coffee_name) AS freq
+from coffee_sales_staging2
+GROUP BY coffee_name
+ORDER BY freq DESC;
+
+-- Answer : Americano with MIlk, Latter and Cappuccino are the top 3 most popular with a large margin
+
+
+-- pricing of coffees
+SELECT DISTINCT
+    coffee_name,
+    money
+FROM coffee_sales_staging2
+ORDER BY coffee_name;
+
+--each coffee has 4 varying price levels. Might be due to discount or Special programs
+
+-- max/ min pricing for coffees
+SELECT
+    coffee_name,
+    MAX(money),
+    MIN(money)
+FROM coffee_sales_staging2
+GROUP BY coffee_name
+ORDER BY coffee_name
+
+
+
+--Income of the store
+SELECT 
+    ROUND(SUM(money))
+FROM coffee_sales_staging2
+
+--Income by month
+SELECT 
+    MONTH(`date`) as monthly,
+    ROUND(SUM(money))
+FROM coffee_sales_staging2
+GROUP BY monthly
+ORDER BY monthly
+
+-- The month with lowest income was April, followed by March. May has the highest income out of all the months by a large margin
+
+--Income by day
+SELECT 
+    DAY(`date`) as daily,
+    ROUND(SUM(money)) as income
+FROM coffee_sales_staging2
+GROUP BY daily
+ORDER BY income DESC
+
+
+-- The middle of the month seems to bring the most income to the store.
+
+
+--Income by hour
+SELECT 
+    SUBSTRING(`datetime`, 1, 2) AS hourly,
+    ROUND(SUM(money)) as income
+FROM coffee_sales_staging2
+GROUP BY hourly
+ORDER BY income DESC
+
+-- Opening hour (10AM) generats the most income by a large margin. Followed by 19PM. Peak horus are generally around that time (lunch/dinner)
+
+
+
+--Payement method
+
+
+SELECT 
+    card,
+    COUNT(card) as purchase_freq
+FROM coffee_sales_staging2
+GROUP BY card
+ORDER BY purchase_freq DESC;
+
+SELECT
+    COUNT(card)
+FROM coffee_sales_staging2
+
+
+SELECT 
+    card,
+    COUNT(card) AS purchase_freq,
+    (COUNT(card) / (Select COUNT(card) FROM coffee_sales_staging2)) * 100 AS purchase_pct
+FROM coffee_sales_staging2
+GROUP BY card
+ORDER BY purchase_pct DESC;
+
+
+--Roll over income
+WITH Rolling_Total AS
+(    SELECT MONTH(`date`) AS `Month`,
+    SUM(money) AS total_revenue
+    FROM coffee_sales_staging2
+    GROUP BY `Month`
+)SELECT `Month`,
+    SUM(total_revenue) OVER(ORDER BY Month) AS rolling_total
+FROM `Rolling_Total`
+
+
+--Daily ranking for each month
+WITH Sales_Month AS
+(
+    SELECT MONTH(`date`) AS monthly,
+    DAY(`date`), 
+    ROUND(SUM(money)) as revenue
+    FROM coffee_sales_staging2
+    GROUP BY `date`
+)
+SELECT *,
+DENSE_RANK() OVER (PARTITION BY monthly ORDER BY revenue)
+FROM `Sales_Month`
