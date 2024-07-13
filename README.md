@@ -10,3 +10,5 @@ This project cleaned the data and did some exploratory data analysis of this fil
   - Most popular purchasing methods (by numbers and percentage)
   - Most frequent customer (by card only)
 
+
+data source : https://www.kaggle.com/datasets/ihelon/coffee-sales
